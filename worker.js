@@ -1,14 +1,13 @@
 // ---------------------------------------------------------------------------
-// Cloudflare Pages Function — POST /api/lead
+// Reframe Houses — Cloudflare Worker
 //
-// Receives a submission from the website lead form and creates an item in the
-// dedicated "Reframe Houses — Website Leads" monday.com board.
+// Serves the static site (from ./public via the ASSETS binding) and handles
+// POST /api/lead, writing each submission into the dedicated
+// "Reframe Houses — Website Leads" monday.com board.
 //
-// Setup:
-//   1. Run  setup/create-monday-board.mjs  once to create the board, then
-//      paste the printed CONFIG object over the placeholder below.
-//   2. Set the monday token as a secret on the Pages project:
-//        wrangler pages secret put MONDAY_TOKEN
+// Deploy: `wrangler deploy` (Workers Builds runs this automatically on push).
+// Secret: set the monday token with `wrangler secret put MONDAY_TOKEN`
+//         (or in the dashboard: the Worker → Settings → Variables and Secrets).
 // ---------------------------------------------------------------------------
 
 // Board: "Reframe Houses — Website Leads" (created 2026-07-05, separate from the
@@ -45,7 +44,7 @@ function toE164(raw) {
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
-function escapeText(s) {
+function clean(s) {
   return (s || "").toString().slice(0, 2000);
 }
 function json(status, body) {
@@ -70,9 +69,9 @@ async function gql(token, query, variables) {
   return data.data;
 }
 
-// ---- handler ---------------------------------------------------------------
+// ---- lead handler ----------------------------------------------------------
 
-export async function onRequestPost({ request, env }) {
+async function handleLead(request, env) {
   const token = env.MONDAY_TOKEN;
   if (!token) return json(500, { ok: false, error: "Server not configured." });
 
@@ -83,20 +82,18 @@ export async function onRequestPost({ request, env }) {
     return json(400, { ok: false, error: "Invalid request." });
   }
 
-  const name = escapeText(body.name).trim();
-  const phone = escapeText(body.phone).trim();
-  const email = escapeText(body.email).trim();
-  const property = escapeText(body.property).trim();
-  const condition = escapeText(body.condition).trim();
-  const notes = escapeText(body.notes).trim();
+  const name = clean(body.name).trim();
+  const phone = clean(body.phone).trim();
+  const email = clean(body.email).trim();
+  const property = clean(body.property).trim();
+  const condition = clean(body.condition).trim();
+  const notes = clean(body.notes).trim();
 
   if (!name || !phone || !property) {
     return json(422, { ok: false, error: "Name, phone, and property are required." });
   }
 
   const { COL } = CONFIG;
-
-  // Build the column values, only including columns that are configured.
   const columnValues = {
     [COL.phone]: { phone: toE164(phone), countryShortName: "US" },
     [COL.dateOfLead]: { date: todayISO() },
@@ -128,7 +125,6 @@ export async function onRequestPost({ request, env }) {
       }
     );
 
-    // Also drop a readable summary as an update on the item.
     const itemId = data.create_item.id;
     const summary =
       `New website lead\n` +
@@ -152,6 +148,20 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
-// Any non-POST method to /api/lead gets a clean 405 (Pages routes by method,
-// so defining only the POST handler is enough — this makes the intent explicit).
-export const onRequestGet = () => json(405, { ok: false, error: "Method not allowed." });
+// ---- entry point -----------------------------------------------------------
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/api/lead") {
+      if (request.method !== "POST") {
+        return json(405, { ok: false, error: "Method not allowed." });
+      }
+      return handleLead(request, env);
+    }
+
+    // Everything else is served from the static assets in ./public
+    return env.ASSETS.fetch(request);
+  },
+};

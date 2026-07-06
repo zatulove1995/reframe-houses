@@ -1,70 +1,66 @@
 # Reframe Houses — Marketing Website + Lead Capture
 
 A conversion-focused landing site for the cash home-buying business, with a lead
-form that writes straight into a dedicated **monday.com** board via a Cloudflare
-Pages Function.
+form that writes straight into a dedicated **monday.com** board. Deployed as a
+**Cloudflare Worker with static assets** (auto-deploys from GitHub via Workers Builds).
 
 ## Files
 ```
-index.html                       all page content
-styles.css                       styling (brand colors are CSS vars at the top)
-script.js                        mobile menu, hero-form handoff, lead POST
-functions/api/lead.js            Cloudflare Pages Function → monday.com
+public/index.html                all page content
+public/styles.css                styling (brand colors are CSS vars at the top)
+public/script.js                 mobile menu, hero-form handoff, lead POST
+worker.js                        the Worker: serves ./public + handles POST /api/lead
+wrangler.toml                    Cloudflare Worker config (name, main, [assets])
 setup/create-monday-board.mjs    one-time: builds the monday board + prints IDs
-wrangler.toml                    Cloudflare Pages config
 ```
 
 ## Run locally (static preview)
 ```bash
-cd reframe-houses
+cd reframe-houses/public
 python3 -m http.server 8000     # visit http://localhost:8000
 ```
-The form still works visually offline — it just shows the success message
-without hitting the API (the API only exists once deployed to Cloudflare).
+The form shows its success message offline; the `/api/lead` endpoint only runs
+once deployed to Cloudflare (or via `npx wrangler dev` from the repo root).
 
 ---
 
-## Go live in 3 steps
+## Deploy (Cloudflare Workers + GitHub)
 
-### 1. Create the monday.com board
-Get a monday API token: monday.com → your avatar → **Developers → My Access Tokens**.
-Then run:
+The repo is connected to a Cloudflare Worker (**reframe-houses1**) via Workers
+Builds, so **every push to `main` triggers a deploy** — no manual step. The
+Worker runs `npx wrangler deploy`, which reads `wrangler.toml` (entry point
+`worker.js` + `./public` static assets).
+
+One-time setup on the Cloudflare side:
+1. **Secret:** add `MONDAY_TOKEN` under the Worker → Settings → Variables and
+   secrets (type: Secret). Without it, the form returns a 500.
+2. **Public URL:** enable the `*.workers.dev` route (Settings → Domains & Routes)
+   or attach a custom domain.
+
+To deploy manually from a machine with Node:
 ```bash
 cd reframe-houses
-MONDAY_TOKEN='paste-token-here' node setup/create-monday-board.mjs
+npx wrangler deploy
+npx wrangler secret put MONDAY_TOKEN   # first time only
 ```
-This creates a **new, separate** board — "Reframe Houses — Website Leads" — with:
-- Groups: New Leads · Contacted · Offer Sent · Under Contract · Closed · Dead
-- Columns: Phone · Email · Property Address · Home Condition · Lead Status ·
-  Source · Date of Lead · Notes
 
-It prints a `CONFIG = {…}` block. **Copy it and paste it over the placeholder
-`CONFIG` object at the top of `functions/api/lead.js`.**
-
-### 2. Deploy to Cloudflare Pages
+### Rebuild the monday board (only if needed)
 ```bash
-wrangler pages deploy . --project-name reframe-houses
+MONDAY_TOKEN='...' node setup/create-monday-board.mjs
 ```
-(First time will prompt `wrangler login` in your browser.)
-
-### 3. Give the Function the token
-```bash
-wrangler pages secret put MONDAY_TOKEN --project-name reframe-houses
-# paste the same token when prompted
-```
-Redeploy once more so the secret is picked up, and you're live. Submitting the
-form now creates a lead in the new board within a second.
+Paste the printed `CONFIG = {…}` block over the `CONFIG` object at the top of
+`worker.js`.
 
 ---
 
 ## Customize
-- **Phone:** already set to (659) 246-2020 — search `+16592462020` / `(659) 246-2020`.
-- **Email:** search `hello@reframehouses.com` in `index.html` to set a real inbox.
-- **Brand colors:** `:root` variables at the top of `styles.css`.
-- **Copy / stats / reviews:** all inline in `index.html`.
+- **Phone:** already set to (659) 246-2020 — search `+16592462020` / `(659) 246-2020` in `public/index.html`.
+- **Email:** search `hello@reframehouses.com` in `public/index.html` to set a real inbox.
+- **Brand colors:** `:root` variables at the top of `public/styles.css`.
+- **Copy / stats / reviews:** all inline in `public/index.html`.
 
 ## Notes
-- The board is intentionally separate from your Quo→monday leads board, so
+- The leads board is intentionally separate from the Quo→monday leads board, so
   website inquiries stay distinct from inbound-call leads.
-- `functions/api/lead.js` normalizes phones to E.164 and sets Lead Status = "New",
-  Source = "Website", and Date of Lead = today automatically.
+- `worker.js` normalizes phones to E.164 and auto-sets Lead Status = "New",
+  Source = "Website", and Date of Lead = today.
