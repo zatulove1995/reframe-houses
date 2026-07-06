@@ -354,6 +354,11 @@ img { max-width: 100%; display: block; }
 }
 
 @media (max-width: 560px) {
+  /* Mobile: keep only the review stars in the top bar; drop the rest */
+  .topbar-sep,
+  .topbar-sep + .topbar-item,
+  .topbar-phone { display: none; }
+
   .section { padding: 64px 0; }
   .offer-mini { flex-direction: column; border-radius: var(--radius); background: transparent; box-shadow: none; border: 0; padding: 0; }
   .offer-mini input { background: var(--white); border: 1px solid var(--line); border-radius: 999px; padding: 14px 20px; box-shadow: var(--shadow-sm); }
