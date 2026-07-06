@@ -1,14 +1,9 @@
-name = "reframe-houses1"
-main = "worker.js"
+name = "reframe-houses"
 compatibility_date = "2024-11-01"
+pages_build_output_dir = "public"
 
-# Static site lives in ./public and is served via the ASSETS binding.
-# The Worker (worker.js) only handles POST /api/lead; all other requests fall
-# through to the static assets.
-[assets]
-directory = "./public"
-binding = "ASSETS"
-
-# Secrets are NOT stored here. Set the monday.com token with:
-#   wrangler secret put MONDAY_TOKEN
-# ...or in the dashboard: the Worker → Settings → Variables and Secrets.
+# Cloudflare Pages project. Static site lives in ./public and the lead-capture
+# API is the Pages Function at functions/api/lead.js.
+#
+# Secret (set in the Pages project dashboard, NOT here):
+#   Settings → Variables and secrets → add MONDAY_TOKEN as an encrypted secret.
