@@ -63,7 +63,8 @@ if (leadForm) {
     btn.textContent = 'Sending…';
 
     try {
-      const res = await fetch('/api/lead', {
+      // API lives on the Worker (cross-origin from reframehouses.com)
+      const res = await fetch('https://reframe-houses1.brian-abb.workers.dev/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

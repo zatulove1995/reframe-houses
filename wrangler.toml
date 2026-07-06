@@ -1,9 +1,12 @@
-name = "reframe-houses"
+name = "reframe-houses1"
+main = "worker.js"
 compatibility_date = "2024-11-01"
-pages_build_output_dir = "public"
 
-# Cloudflare Pages project. Static site lives in ./public and the lead-capture
-# API is the Pages Function at functions/api/lead.js.
-#
-# Secret (set in the Pages project dashboard, NOT here):
-#   Settings → Variables and secrets → add MONDAY_TOKEN as an encrypted secret.
+# This Worker is the API backend (POST /api/lead → monday.com) and also serves
+# the static site from ./docs as a fallback at the *.workers.dev URL.
+# The primary site is served on reframehouses.com via GitHub Pages (same ./docs).
+[assets]
+directory = "./docs"
+binding = "ASSETS"
+
+# Secret (set in the dashboard, not here): MONDAY_TOKEN.
