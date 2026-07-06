@@ -78,6 +78,18 @@ img { max-width: 100%; display: block; }
   backdrop-filter: saturate(160%) blur(12px);
   border-bottom: 1px solid var(--line);
 }
+
+/* Review / trust bar */
+.topbar { background: var(--green-900); color: var(--sand); font-size: 13.5px; }
+.topbar-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px 16px; padding: 8px 24px; flex-wrap: wrap; text-align: center;
+}
+.topbar-item { display: inline-flex; align-items: center; }
+.topbar-item strong { color: #fff; font-weight: 700; }
+.topbar-stars { color: var(--gold); letter-spacing: 1.5px; margin-right: 8px; font-size: 15px; }
+.topbar-sep { color: rgba(246,242,234,.4); }
+
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
 
 .logo { display: inline-flex; align-items: center; gap: 10px; color: var(--green-800); }
@@ -294,7 +306,7 @@ img { max-width: 100%; display: block; }
 
   /* Mobile menu */
   .main-nav.open {
-    display: flex; flex-direction: column; position: absolute; top: 72px; left: 0; right: 0;
+    display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0;
     background: var(--white); padding: 20px 24px; gap: 4px; border-bottom: 1px solid var(--line);
     box-shadow: var(--shadow-md);
   }
