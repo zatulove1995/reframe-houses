@@ -263,6 +263,7 @@ img { max-width: 100%; display: block; }
 
 /* CTA section */
 .cta-section { background: linear-gradient(160deg, var(--green-900), var(--green-700)); color: var(--sand); }
+#get-offer { scroll-margin-top: 96px; } /* clear the sticky header when jumped to */
 .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
 .cta-copy h2 { color: var(--white); font-size: clamp(28px, 3.6vw, 40px); }
 .cta-copy p { color: rgba(246,242,234,.82); font-size: 17px; margin-top: 16px; }
