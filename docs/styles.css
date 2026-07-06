@@ -82,21 +82,12 @@ img { max-width: 100%; display: block; }
 /* Review / trust + call bar */
 .topbar { background: var(--green-900); color: var(--sand); font-size: 13.5px; }
 .topbar-inner {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: center;
   gap: 6px 18px; padding: 8px 24px; flex-wrap: wrap;
 }
-.topbar-left { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; }
 .topbar-item { display: inline-flex; align-items: center; }
 .topbar-item strong { color: #fff; font-weight: 700; }
 .topbar-stars { color: var(--gold); letter-spacing: 1.5px; margin-right: 8px; font-size: 15px; }
-.topbar-sep { color: rgba(246,242,234,.4); }
-.topbar-phone {
-  display: inline-flex; align-items: center; gap: 7px; color: var(--gold);
-  font-weight: 600; white-space: nowrap; transition: color .15s;
-}
-.topbar-phone strong { color: #fff; font-weight: 700; }
-.topbar-phone:hover { color: #fff; }
-.topbar-phone:hover strong { color: var(--gold); }
 
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
 
@@ -355,11 +346,6 @@ img { max-width: 100%; display: block; }
 }
 
 @media (max-width: 560px) {
-  /* Mobile: keep only the review stars in the top bar; drop the rest */
-  .topbar-sep,
-  .topbar-sep + .topbar-item,
-  .topbar-phone { display: none; }
-
   .section { padding: 64px 0; }
   .offer-mini { flex-direction: column; border-radius: var(--radius); background: transparent; box-shadow: none; border: 0; padding: 0; }
   .offer-mini input { background: var(--white); border: 1px solid var(--line); border-radius: 999px; padding: 14px 20px; box-shadow: var(--shadow-sm); }
