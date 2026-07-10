@@ -69,6 +69,45 @@ async function gql(token, query, variables) {
   return data.data;
 }
 
+// Post a new-lead notification to Slack via an Incoming Webhook (set the
+// SLACK_WEBHOOK_URL secret on the Worker). No webhook set = silently skip.
+const MONDAY_ACCOUNT_SLUG = "zatulovebrians-team";
+
+async function notifySlack(env, lead) {
+  const url = env.SLACK_WEBHOOK_URL;
+  if (!url) return; // Slack not configured — skip quietly.
+
+  const itemUrl = `https://${MONDAY_ACCOUNT_SLUG}.monday.com/boards/${CONFIG.MONDAY_BOARD_ID}/pulses/${lead.itemId}`;
+  const lines = [
+    `*Name:* ${lead.name}`,
+    `*Phone:* ${lead.phone}`,
+    lead.email ? `*Email:* ${lead.email}` : null,
+    `*Property:* ${lead.property}`,
+    lead.condition ? `*Condition:* ${lead.condition}` : null,
+    lead.notes ? `*Notes:* ${lead.notes}` : null,
+  ].filter(Boolean);
+
+  const payload = {
+    text: `🏠 New website lead: ${lead.name} — ${lead.phone}`,
+    blocks: [
+      { type: "header", text: { type: "plain_text", text: "🏠 New Website Lead", emoji: true } },
+      { type: "section", text: { type: "mrkdwn", text: lines.join("\n") } },
+      {
+        type: "actions",
+        elements: [
+          { type: "button", text: { type: "plain_text", text: "View in monday", emoji: true }, url: itemUrl },
+        ],
+      },
+    ],
+  };
+
+  await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
 // ---- lead handler ----------------------------------------------------------
 
 async function handleLead(request, env) {
@@ -141,6 +180,9 @@ async function handleLead(request, env) {
       }`,
       { item: itemId, body: summary }
     ).catch(() => {}); // update is best-effort
+
+    // Post to Slack (#website-leads) — best-effort, never blocks the lead.
+    await notifySlack(env, { name, phone, email, property, condition, notes, itemId }).catch(() => {});
 
     return json(200, { ok: true, id: itemId });
   } catch (err) {
