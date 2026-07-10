@@ -75,7 +75,7 @@ const MONDAY_ACCOUNT_SLUG = "zatulovebrians-team";
 
 async function notifySlack(env, lead) {
   const url = env.SLACK_WEBHOOK_URL;
-  if (!url) return; // Slack not configured — skip quietly.
+  if (!url) return "skipped:no-webhook"; // Slack not configured — skip quietly.
 
   const itemUrl = `https://${MONDAY_ACCOUNT_SLUG}.monday.com/boards/${CONFIG.MONDAY_BOARD_ID}/pulses/${lead.itemId}`;
   const lines = [
@@ -101,11 +101,12 @@ async function notifySlack(env, lead) {
     ],
   };
 
-  await fetch(url, {
+  const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+  return "sent:" + r.status;
 }
 
 // ---- lead handler ----------------------------------------------------------
@@ -182,9 +183,10 @@ async function handleLead(request, env) {
     ).catch(() => {}); // update is best-effort
 
     // Post to Slack (#website-leads) — best-effort, never blocks the lead.
-    await notifySlack(env, { name, phone, email, property, condition, notes, itemId }).catch(() => {});
+    const slack = await notifySlack(env, { name, phone, email, property, condition, notes, itemId })
+      .catch((e) => "error:" + ((e && e.message) || "unknown").slice(0, 80));
 
-    return json(200, { ok: true, id: itemId });
+    return json(200, { ok: true, id: itemId, slack });
   } catch (err) {
     return json(502, { ok: false, error: "Could not save lead." });
   }
